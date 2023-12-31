@@ -10,6 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// Migrate performs the database migration using the given database connection
+// and migrations path.
 func Migrate(db *gorm.DB, migrationsPath string) error {
 
 	sqlDB, err := db.DB()

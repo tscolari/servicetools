@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// NewWithHealthcheck returns a WithHealthcheck object configured with address and metrics.
 func NewWithHealthcheck(address string, metrics bool) *WithHealthcheck {
 	return &WithHealthcheck{
 		address: address,
@@ -18,6 +19,8 @@ func NewWithHealthcheck(address string, metrics bool) *WithHealthcheck {
 	}
 }
 
+// WithHealthcheck implements a simple HTTP server that has `/live` and `/ready` endpoints.
+// If started with `metrics: true` it will also expose metrics through the `/metrics` endpoint.
 type WithHealthcheck struct {
 	address string
 	metrics bool
@@ -26,10 +29,8 @@ type WithHealthcheck struct {
 	server   *http.Server
 }
 
-func (h *WithHealthcheck) ConfigureHealthcheck(*WithHealthcheck) {
-	panic("ConfigureHealthcheck must be implemented")
-}
-
+// StartHealthcheck will start the HTTP healthcheck server and block
+// until the StopHealthcheck method is called.
 func (h *WithHealthcheck) StartHealthcheck(logger *slog.Logger) error {
 
 	lis, err := net.Listen("tcp", h.address)
@@ -60,6 +61,13 @@ func (h *WithHealthcheck) StartHealthcheck(logger *slog.Logger) error {
 	return nil
 }
 
+// StopHealthcheck will stop the Healthcheck server and cause Start() to unblock.
 func (h *WithHealthcheck) StopHealthcheck(ctx context.Context) error {
 	return h.server.Shutdown(ctx)
+}
+
+// ConfigureHealthcheck is the hook used by the cmd package to inject the
+// WithHealthcheck object. Services using WithHealthcheck must overwrite this method.
+func (h *WithHealthcheck) ConfigureHealthcheck(*WithHealthcheck) {
+	panic("ConfigureHealthcheck must be implemented")
 }

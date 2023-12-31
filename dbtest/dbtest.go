@@ -24,6 +24,18 @@ func init() {
 	initializedDBs = map[string]struct{}{}
 }
 
+// DB is meant to be used in tests.
+// It will take a migrations path and a database name to be used.
+// The first time it gets called, it will ensure that the database
+// exists (it will be dropped and recreated if possible) and migrate
+// the database.
+// On every call it will truncate all the tables (except the schema one)
+// to ensure that there is no data contamination.
+// It will always append `_test` to the given database name.
+//
+// Because DB will reset the database on every call, it's not safe for
+// it to be used in parallel tests, unless they are using different
+// database names.
 func DB(t *testing.T, migrationsPath, name string) (*gorm.DB, func()) {
 
 	name = name + "_test"
@@ -44,6 +56,13 @@ func DB(t *testing.T, migrationsPath, name string) (*gorm.DB, func()) {
 	resetDB(t, db, name)
 
 	return db, func() { defer Close(t, db) }
+}
+
+// Close can be used to close a database connection.
+func Close(t *testing.T, db *gorm.DB) {
+	sqlDB, err := db.DB()
+	require.NoError(t, err)
+	require.NoError(t, sqlDB.Close())
 }
 
 func isDBInitialized(name string) bool {
@@ -98,12 +117,6 @@ func resetDB(t *testing.T, db *gorm.DB, name string) {
 
 func connectionString(user, password, dbname string) string {
 	return fmt.Sprintf("host=127.0.0.1 port=5432 sslmode=disable user=%s password=%s dbname=%s", user, password, dbname)
-}
-
-func Close(t *testing.T, db *gorm.DB) {
-	sqlDB, err := db.DB()
-	require.NoError(t, err)
-	require.NoError(t, sqlDB.Close())
 }
 
 func migrateDB(t *testing.T, db *gorm.DB, migrationsPath string) {

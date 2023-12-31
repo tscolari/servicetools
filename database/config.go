@@ -1,7 +1,6 @@
 package database
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -20,6 +19,7 @@ const (
 
 var ErrNoEnvConfiguration = errors.New("no database configuration available on environmental variables")
 
+// Config defines the basic configuration for connecting to the database.
 type Config struct {
 	Hostname string `json:"hostname,omitempty"`
 	Port     int    `json:"port,omitempty"`
@@ -29,15 +29,8 @@ type Config struct {
 	SSLMode  bool   `json:"ssl_mode,omitempty"`
 }
 
-func ConfigFromJson(cfg json.RawMessage) (*Config, error) {
-	var config Config
-	if err := json.Unmarshal(cfg, &config); err != nil {
-		return nil, fmt.Errorf("failed to parse database configuration: %w", err)
-	}
-
-	return &config, nil
-}
-
+// ConfigFromEnv loads the database configuration from env variables
+// using the given prefix and the `_` separator.
 func ConfigFromEnv(prefix string) (*Config, error) {
 	config := Config{
 		Hostname: os.Getenv(fmt.Sprintf("%s_%s", prefix, envHostname)),
@@ -62,15 +55,7 @@ func ConfigFromEnv(prefix string) (*Config, error) {
 	return &config, nil
 }
 
-func (c Config) ToJSON() (json.RawMessage, error) {
-	data, err := json.Marshal(&c)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert config to JSON: %v", err)
-	}
-
-	return data, nil
-}
-
+// ToConnectStr returns a connection string using the config's values.
 func (c Config) ToConnectStr() string {
 	return fmt.Sprintf(
 		"host=%s port=%d sslmode=%s user=%s password=%s dbname=%s",

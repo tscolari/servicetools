@@ -9,35 +9,50 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+
 	"github.com/tscolari/servicetools/database"
 	"github.com/tscolari/servicetools/logging"
 	"github.com/tscolari/servicetools/server"
 )
 
+// Server defines the interface that this command uses to start/stop.
+type Server interface {
+	Start(context.Context, *slog.Logger) error
+	Stop(context.Context, *slog.Logger) error
+}
+
+// HasGRPC means the Server has gRPC capability.
 type HasGRPC interface {
 	ConfigureGRPC(*server.WithGRPC)
 }
 
-type HasDatabase interface {
-	ConfigureDatabase(*server.WithDB)
-}
-
-type HasHealthcheck interface {
-	ConfigureHealthcheck(*server.WithHealthcheck)
-}
-
+// HasHTTP means the Server has HTTP capability.
 type HasHTTP interface {
 	ConfigureHTTP(*server.WithHTTP)
 }
 
-type HasReaderDatabase interface {
-	ConfigureReaderDatabase(*server.WithRDB)
-}
-
+// HasWorker means the Server has worker capability.
 type HasWorker interface {
 	ConfigureWorker(*server.WithWorker)
 }
 
+// HasHealthcheck means the Server has healthcheck capability.
+type HasHealthcheck interface {
+	ConfigureHealthcheck(*server.WithHealthcheck)
+}
+
+// HasDatabase means the Server has database capability.
+type HasDatabase interface {
+	ConfigureDatabase(*server.WithDB)
+}
+
+// HasReaderDatabase means the Server has database reader capability.
+type HasReaderDatabase interface {
+	ConfigureReaderDatabase(*server.WithRDB)
+}
+
+// CanServer injects the "server" (or start) subcommand to another command.
+// It will start the given Server based on the capabilities that it implements.
 func CanServer(rootCmd *cobra.Command, srv Server) {
 	serverToRun = srv
 
@@ -65,14 +80,6 @@ func CanServer(rootCmd *cobra.Command, srv Server) {
 	}
 
 	rootCmd.AddCommand(serverCmd)
-}
-
-type Server interface {
-	Start(context.Context, *slog.Logger) error
-	Stop(context.Context, *slog.Logger) error
-}
-
-func init() {
 }
 
 var (

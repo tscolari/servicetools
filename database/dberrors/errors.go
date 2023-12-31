@@ -10,6 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// ToStatusErr converts an error returned from database operations
+// into a status.Error.
 func ToStatusErr(err error, msgs ...string) error {
 	if err == nil {
 		return nil

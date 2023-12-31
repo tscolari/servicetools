@@ -12,6 +12,7 @@ import (
 	grpcsrv "github.com/tscolari/servicetools/server/grpc"
 )
 
+// NewWithGRPC returns a WithGRPC object set to listen at the given address.
 func NewWithGRPC(address string) *WithGRPC {
 	return &WithGRPC{
 		address:     address,
@@ -20,8 +21,11 @@ func NewWithGRPC(address string) *WithGRPC {
 	}
 }
 
+// GRPCRegisterFunc is used as arguments to the Start method.
+// It exposes the internal gRPC server and allow gRPC services to register to it.
 type GRPCRegisterFunc func(*grpc.Server)
 
+// WithGRPC defines the gRPC server capability.
 type WithGRPC struct {
 	address     string
 	started     bool
@@ -31,10 +35,9 @@ type WithGRPC struct {
 	server *grpc.Server
 }
 
-func (s *WithGRPC) ConfigureGRPC(*WithGRPC) {
-	panic("ConfigureGRPC must be implemented")
-}
-
+// Start will bind the internal gRPC server to the address and execute all
+// given registerFuncs.
+// This will block until the server is stopped (using Stop()).
 func (s *WithGRPC) Start(ctx context.Context, logger *slog.Logger, registerFuncs ...GRPCRegisterFunc) error {
 	if s.started {
 		return nil
@@ -72,10 +75,12 @@ func (s *WithGRPC) Start(ctx context.Context, logger *slog.Logger, registerFuncs
 	return nil
 }
 
+// StartedChan can be used by a caller to block until the server has started.
 func (s *WithGRPC) StartedChan() <-chan struct{} {
 	return s.startedChan
 }
 
+// Stop will gracefully stop the internal gRPC Server.
 func (s *WithGRPC) Stop(ctx context.Context) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -83,4 +88,10 @@ func (s *WithGRPC) Stop(ctx context.Context) error {
 	s.server.GracefulStop()
 
 	return nil
+}
+
+// ConfigureGRPC is the hook used by the cmd package to inject the
+// WithGRPC object. Services using WithGRPC must overwrite this method.
+func (s *WithGRPC) ConfigureGRPC(*WithGRPC) {
+	panic("ConfigureGRPC must be implemented")
 }

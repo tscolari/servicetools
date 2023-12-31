@@ -5,31 +5,38 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/spf13/cobra"
 	"github.com/tscolari/servicetools/database"
 )
 
+// CanMigrate injects the "migrate" subcommand to another command.
 func CanMigrate(rootCmd *cobra.Command) {
 	rootCmd.AddCommand(migrateCmd)
 }
 
 func init() {
-	migrateCmd.PersistentFlags().StringVarP(&migrationsPath, "path", "p", "./migrations", "path to migrations")
+	// path should point to a folder migration files.
+	migrateCmd.PersistentFlags().StringVarP(&migratePath, "path", "p", "./migrations", "path to all migrations")
+	migrateCmd.PersistentFlags().StringVarP(&migrateEnvPrefix, "db-env-prefix", "e", "DATABASE", "prefix for all DB env variables")
 }
 
 var (
-	migrationsPath string
+	migratePath      string
+	migrateEnvPrefix string
 )
 
+// migrateCmd performs the database migration for the given path.
+// The connection to the database will use the given `db-env-prefix` for:
+// "_HOSTNAME", "_PORT", "_USERNAME", "_PASSWORD", "_NAME" and "_SSLMODE".
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Migrates the database with the given migrations",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		migrationStat, err := os.Stat(migrationsPath)
+		migrationStat, err := os.Stat(migratePath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to identify the migrations path: %v", err)
 			return err
@@ -42,7 +49,7 @@ var migrateCmd = &cobra.Command{
 
 		var dbConfig *database.Config
 
-		dbConfig, err = database.ConfigFromEnv("DATABASE")
+		dbConfig, err = database.ConfigFromEnv(migrateEnvPrefix)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to load configuration from env: %v\n", err)
 			return err
@@ -54,7 +61,7 @@ var migrateCmd = &cobra.Command{
 			return err
 		}
 
-		if err := database.Migrate(db, migrationsPath); err != nil {
+		if err := database.Migrate(db, migratePath); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to migrate the database: %w\n", err)
 			return err
 		}
