@@ -40,7 +40,7 @@ func (s *WithDB) DB(ctx context.Context) *gorm.DB {
 }
 
 // ConfigureDatabase is the hook used by the cmd package to inject the
-// WithDB object. Services using WithDB must overwrite this method.
+// WithDB object in the host struct. This must be implemented by the host struct.
 func (s *WithDB) ConfigureDatabase(*WithDB) {
 	panic("ConfigureDatabase must be implemented")
 }

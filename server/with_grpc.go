@@ -91,7 +91,7 @@ func (s *WithGRPC) Stop(ctx context.Context) error {
 }
 
 // ConfigureGRPC is the hook used by the cmd package to inject the
-// WithGRPC object. Services using WithGRPC must overwrite this method.
+// WithGRPC object in the host struct. This must be implemented by the host struct.
 func (s *WithGRPC) ConfigureGRPC(*WithGRPC) {
 	panic("ConfigureGRPC must be implemented")
 }

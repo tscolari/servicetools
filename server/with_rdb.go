@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/tscolari/servicetools/database"
@@ -10,15 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewWithRDBFromJSONConfig(jsonConfig json.RawMessage) (*WithRDB, error) {
-	cfg, err := database.ConfigFromJson(jsonConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse database configuration: %w", err)
-	}
-
-	return NewWithRDB(cfg)
-}
-
+// NewWithRDB returns a WithRDB object configured with the given config.
 func NewWithRDB(databaseConfig *database.Config) (*WithRDB, error) {
 	db, err := gorm.Open(postgres.Open(databaseConfig.ToConnectStr()))
 	if err != nil {
@@ -30,16 +21,20 @@ func NewWithRDB(databaseConfig *database.Config) (*WithRDB, error) {
 	}, nil
 }
 
-// WithDB defines a struct that has capability to access the database.
+// WithRDB defines a struct that has capability to access the database.
+// Although this has no semantic restriction, the idea of this is to provide
+// a second database access (on top of the WithDB) that is meant for read-only operations.
 type WithRDB struct {
 	BaseRDB *gorm.DB
 }
 
+// ConfigureReaderDatabase is the hook used by the cmd package to inject the
+// WithRDB object in the host struct. This must be implemented by the host struct.
 func (s *WithRDB) ConfigureReaderDatabase(*WithRDB) {
 	panic("ConfigureReaderDatabase must be implemented")
 }
 
-// DB returns an usable DB connection
+// RDB returns an usable DB connection, meant for read-only operations.
 func (s *WithRDB) RDB(ctx context.Context) *gorm.DB {
 	if s.BaseRDB == nil {
 		return nil

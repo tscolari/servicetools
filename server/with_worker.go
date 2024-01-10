@@ -7,6 +7,7 @@ import (
 	"sync"
 )
 
+// NewWithWorker returns a new worker object.
 func NewWithWorker() *WithWorker {
 	return &WithWorker{
 		mutex:       new(sync.Mutex),
@@ -19,6 +20,9 @@ func NewWithWorker() *WithWorker {
 // the context is canceled.
 type WorkerTaskFunc func(ctx context.Context, logger *slog.Logger) error
 
+// WithWorker implements simple worker capabilities.
+// It can be started with a list of taks (WorkerTaskFunc), where each
+// will be spawn in a goroutine.
 type WithWorker struct {
 	ctx       context.Context
 	cancelCtx func()
@@ -29,10 +33,16 @@ type WithWorker struct {
 	wg          *sync.WaitGroup
 }
 
+// ConfigureWorker is the hook used by the cmd package to inject the
+// WithWorker object in the host struct. This must be implemented by the host struct.
 func (w *WithWorker) ConfigureWorker(*WithWorker) {
 	panic("ConfigureWorker must be implemented")
 }
 
+// Start will start all the given tasks, and block until all them are finished.
+// Once all tasks are started/scheduled, the channel from StartedChan() will unblock.
+// Tasks are WorkerTaskFunc functions, and they should exit once the given context
+// is canceled.
 func (w *WithWorker) Start(ctx context.Context, logger *slog.Logger, tasks ...WorkerTaskFunc) error {
 	w.mutex.Lock()
 
@@ -64,6 +74,7 @@ func (w *WithWorker) Start(ctx context.Context, logger *slog.Logger, tasks ...Wo
 	return nil
 }
 
+// Stop will signal to all internal tasks to stop, by canceling their internal contexts.
 func (w *WithWorker) Stop(ctx context.Context, logger *slog.Logger) error {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
@@ -72,6 +83,8 @@ func (w *WithWorker) Stop(ctx context.Context, logger *slog.Logger) error {
 	return nil
 }
 
+// StartedChan returns a channel that can be used to inspect if all the tasks have
+// been started.
 func (w *WithWorker) StartedChan() <-chan error {
 	return w.startedChan
 }

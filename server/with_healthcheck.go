@@ -67,7 +67,7 @@ func (h *WithHealthcheck) StopHealthcheck(ctx context.Context) error {
 }
 
 // ConfigureHealthcheck is the hook used by the cmd package to inject the
-// WithHealthcheck object. Services using WithHealthcheck must overwrite this method.
+// WithHealthcheck object in the host struct. This must be implemented by the host struct.
 func (h *WithHealthcheck) ConfigureHealthcheck(*WithHealthcheck) {
 	panic("ConfigureHealthcheck must be implemented")
 }
