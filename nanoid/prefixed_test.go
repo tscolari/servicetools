@@ -17,3 +17,20 @@ func Test_Generator(t *testing.T) {
 	id := idFunc()
 	require.Regexp(t, "acc_[a-zA-Z0-9]{17}", id)
 }
+
+func Test_Valid(t *testing.T) {
+	id := nanoid.New("cus")
+	require.True(t, nanoid.Valid("cus", id))
+
+	id = nanoid.New("nop")
+	require.False(t, nanoid.Valid("cus", id))
+
+	id = nanoid.New("cus")
+	require.False(t, nanoid.Valid("cus", id[:20]))
+
+	id = nanoid.New("cus") + "a"
+	require.False(t, nanoid.Valid("cus", id))
+
+	id = nanoid.New("acus")
+	require.False(t, nanoid.Valid("cus", id))
+}

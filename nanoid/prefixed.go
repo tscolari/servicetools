@@ -4,6 +4,7 @@ package nanoid
 
 import (
 	"fmt"
+	"regexp"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
@@ -28,4 +29,11 @@ func Generator(prefix string) func() string {
 	return func() string {
 		return New(prefix)
 	}
+}
+
+// Valid verifies if the given nanoid is valid using the
+// rules of this package and the given prefix.
+func Valid(prefix, nanoid string) bool {
+	m, _ := regexp.Match(fmt.Sprintf("^%s_[%s]{%d}$", prefix, alphabet, length), []byte(nanoid))
+	return m
 }
