@@ -13,11 +13,12 @@ import (
 )
 
 // NewWithGRPC returns a WithGRPC object set to listen at the given address.
-func NewWithGRPC(address string) *WithGRPC {
+func NewWithGRPC(address string, options ...grpc.ServerOption) *WithGRPC {
 	return &WithGRPC{
 		address:     address,
 		mutex:       new(sync.Mutex),
 		startedChan: make(chan struct{}),
+		options:     options,
 	}
 }
 
@@ -31,8 +32,9 @@ type WithGRPC struct {
 	started     bool
 	startedChan chan struct{}
 
-	mutex  *sync.Mutex
-	server *grpc.Server
+	options []grpc.ServerOption
+	mutex   *sync.Mutex
+	server  *grpc.Server
 }
 
 // Start will bind the internal gRPC server to the address and execute all
@@ -52,21 +54,24 @@ func (s *WithGRPC) Start(ctx context.Context, logger *slog.Logger, registerFuncs
 	}
 
 	s.server = grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			grpcsrv.LoggerInterceptor(logger),
-			grpcsrv.LoggerAnnotationInterceptor,
-		),
+		append(s.options,
+			grpc.ChainUnaryInterceptor(
+				grpcsrv.LoggerInterceptor(logger),
+				grpcsrv.LoggerAnnotationInterceptor,
+			),
+		)...,
 	)
 
 	for _, registerFunc := range registerFuncs {
 		registerFunc(s.server)
 	}
 
+	s.address = listener.Addr().String()
 	s.started = true
-	logger.Info("starting GRPC Server", "address", listener.Addr().String())
+	logger.Info("starting GRPC Server", "address", s.address)
 	s.mutex.Unlock()
 
-	s.startedChan <- struct{}{}
+	close(s.startedChan)
 
 	if err = s.server.Serve(listener); err != nil {
 		return fmt.Errorf("grpc server returned an error: %w", err)
@@ -76,6 +81,7 @@ func (s *WithGRPC) Start(ctx context.Context, logger *slog.Logger, registerFuncs
 }
 
 // StartedChan can be used by a caller to block until the server has started.
+// Once the server has started, the channel will be closed and unblocked.
 func (s *WithGRPC) StartedChan() <-chan struct{} {
 	return s.startedChan
 }
@@ -86,7 +92,6 @@ func (s *WithGRPC) Stop(ctx context.Context) error {
 	defer s.mutex.Unlock()
 
 	s.server.GracefulStop()
-
 	return nil
 }
 
