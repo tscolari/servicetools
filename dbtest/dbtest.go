@@ -89,7 +89,9 @@ func initializeDB(t *testing.T, migrationsPath, name string) *gorm.DB {
 	db, err = gorm.Open(postgres.Open(connStr))
 	require.NoError(t, err, "failed to open DB connection")
 
-	migrateDB(t, db, migrationsPath)
+	if migrationsPath != "" {
+		migrateDB(t, db, migrationsPath)
+	}
 
 	return db
 }
