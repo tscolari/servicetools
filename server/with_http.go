@@ -35,7 +35,7 @@ type WithHTTP struct {
 
 // HTTPRegisterFunc defines the functions that can be passed to Start
 // in order to register new endpoints in the internal mux.
-type HTTPRegisterFunc func(handle func(path string, handler http.Handler))
+type HTTPRegisterFunc func(handle func(path string, handler func(http.ResponseWriter, *http.Request)))
 
 // ConfigureHTTP is the hook used by the cmd package to inject the
 // WithHTTP object in the host struct. This must be implemented by the host struct.
@@ -60,10 +60,11 @@ func (s *WithHTTP) Start(ctx context.Context, logger *slog.Logger, registerFuncs
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
 
+	s.address = listener.Addr().String()
 	s.mux = http.NewServeMux()
 	for _, registerFunc := range registerFuncs {
 		// inject "interceptors" here wrapping mix.Handle
-		registerFunc(s.mux.Handle)
+		registerFunc(s.mux.HandleFunc)
 	}
 
 	s.server = &http.Server{
@@ -75,7 +76,7 @@ func (s *WithHTTP) Start(ctx context.Context, logger *slog.Logger, registerFuncs
 	logger.Info("starting HTTP Server", "address", listener.Addr().String())
 
 	s.mutex.Unlock()
-	s.startedChan <- struct{}{}
+	close(s.startedChan)
 
 	if err := s.server.Serve(listener); err != nil {
 		if err != http.ErrServerClosed {
