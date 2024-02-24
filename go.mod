@@ -1,6 +1,6 @@
 module github.com/tscolari/servicetools
 
-go 1.21.5
+go 1.22.0
 
 require (
 	github.com/gogo/status v1.1.1
