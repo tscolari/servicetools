@@ -63,7 +63,7 @@ func Test_WithHTTP(t *testing.T) {
 
 		conn, err := net.DialTimeout("tcp", withHTTP.address, 100*time.Millisecond)
 		require.NoError(t, err)
-		defer conn.Close()
+		require.NoError(t, conn.Close())
 
 		t.Run("closing the server", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
@@ -95,6 +95,7 @@ func Test_WithHTTP(t *testing.T) {
 		service2 := func(handle func(path string, handler func(http.ResponseWriter, *http.Request))) {
 			handle("/foobar", func(w http.ResponseWriter, r *http.Request) {
 				foobarCalled = true
+				require.NoError(t, r.Body.Close())
 			})
 		}
 
