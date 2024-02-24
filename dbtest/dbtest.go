@@ -6,11 +6,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/stretchr/testify/require"
 	"github.com/tscolari/servicetools/database"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	// used because the source of the migration is a file.
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 const (
@@ -125,7 +127,9 @@ func migrateDB(t *testing.T, db *gorm.DB, migrationsPath string) {
 	dir, err := os.Getwd()
 	require.NoError(t, err, "failed to get current directory")
 	baseDir := dir
-	defer os.Chdir(dir)
+	defer func() {
+		_ = os.Chdir(dir)
+	}()
 
 	var path string
 	for {

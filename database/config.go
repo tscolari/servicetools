@@ -17,6 +17,8 @@ const (
 	envSSLMode  = "SSLMODE"
 )
 
+// ErrNoEnvConfiguration is used when a configuration can't be created
+// from the environmental variables during execution.
 var ErrNoEnvConfiguration = errors.New("no database configuration available on environmental variables")
 
 // Config defines the basic configuration for connecting to the database.

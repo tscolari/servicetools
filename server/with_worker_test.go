@@ -107,4 +107,3 @@ func Test_WithWorker(t *testing.T) {
 
 	})
 }
-

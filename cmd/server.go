@@ -164,7 +164,9 @@ var serverCmd = &cobra.Command{
 				logger.Info("server context was closed, exiting")
 			}
 
-			serverToRun.Stop(ctx, logger)
+			if err := serverToRun.Stop(ctx, logger); err != nil {
+				logger.Error("attempt to stop server failed", "error", err)
+			}
 		}()
 
 		if err := serverToRun.Start(ctx, logger); err != nil {

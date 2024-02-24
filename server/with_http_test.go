@@ -68,7 +68,7 @@ func Test_WithHTTP(t *testing.T) {
 		t.Run("closing the server", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 			defer cancel()
-			withHTTP.Stop(ctx, slog.Default())
+			require.NoError(t, withHTTP.Stop(ctx, slog.Default()))
 
 			_, err := net.DialTimeout("tcp", withHTTP.address, 50*time.Millisecond)
 			require.Error(t, err)
@@ -101,7 +101,9 @@ func Test_WithHTTP(t *testing.T) {
 		go func() {
 			require.NoError(t, withHTTP.Start(context.Background(), slog.Default(), service1, service2))
 		}()
-		defer withHTTP.Stop(context.Background(), slog.Default())
+		defer func() {
+			require.NoError(t, withHTTP.Stop(context.Background(), slog.Default()))
+		}()
 
 		select {
 		case <-withHTTP.StartedChan():

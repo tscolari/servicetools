@@ -16,7 +16,7 @@ const (
 	loggerFieldStatusCode = "status_code"
 )
 
-// LoggingInterceptor adds a logger to the context and annotates it.
+// LoggerInterceptor adds a logger to the context and annotates it.
 func LoggerInterceptor(logger *slog.Logger) func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
@@ -25,7 +25,7 @@ func LoggerInterceptor(logger *slog.Logger) func(ctx context.Context, req any, i
 	}
 }
 
-// RequestLoggingInterceptor adds annotations to the logger based on the request.
+// LoggerAnnotationInterceptor adds annotations to the logger based on the request.
 // It also logs debugging information for every request.
 func LoggerAnnotationInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 	logger := logging.FromContext(ctx)

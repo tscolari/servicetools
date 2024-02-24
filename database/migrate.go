@@ -6,8 +6,10 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	migratepg "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"gorm.io/gorm"
+
+	// used because the source of the migration is a file.
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 // Migrate performs the database migration using the given database connection

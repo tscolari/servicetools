@@ -1,4 +1,4 @@
-// nanoid is an opinionated use of the `github.com/matoous/go-nanoid/v2` library.
+// Package nanoid is an opinionated use of the `github.com/matoous/go-nanoid/v2` library.
 // It provides default length and helpers to prefix the generated id.
 package nanoid
 

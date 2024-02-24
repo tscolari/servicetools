@@ -87,12 +87,11 @@ func (s *WithGRPC) StartedChan() <-chan struct{} {
 }
 
 // Stop will gracefully stop the internal gRPC Server.
-func (s *WithGRPC) Stop(ctx context.Context) error {
+func (s *WithGRPC) Stop(ctx context.Context) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	s.server.GracefulStop()
-	return nil
 }
 
 // ConfigureGRPC is the hook used by the cmd package to inject the

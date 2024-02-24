@@ -93,9 +93,7 @@ func (s *WithHTTP) Stop(ctx context.Context, logger *slog.Logger) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	s.server.Shutdown(ctx)
-
-	return nil
+	return s.server.Shutdown(ctx)
 }
 
 // StartedChan returns a channel that can be used to observe if

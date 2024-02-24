@@ -57,12 +57,12 @@ var migrateCmd = &cobra.Command{
 
 		db, err := gorm.Open(postgres.Open(dbConfig.ToConnectStr()))
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to connect to database: %w\n", err)
+			fmt.Fprintf(os.Stderr, "failed to connect to database: %v\n", err)
 			return err
 		}
 
 		if err := database.Migrate(db, migratePath); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to migrate the database: %w\n", err)
+			fmt.Fprintf(os.Stderr, "failed to migrate the database: %v\n", err)
 			return err
 		}
 

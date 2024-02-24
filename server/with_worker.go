@@ -24,7 +24,6 @@ type WorkerTaskFunc func(ctx context.Context, logger *slog.Logger) error
 // It can be started with a list of taks (WorkerTaskFunc), where each
 // will be spawn in a goroutine.
 type WithWorker struct {
-	ctx       context.Context
 	cancelCtx func()
 
 	mutex       *sync.Mutex
@@ -78,12 +77,11 @@ func (w *WithWorker) Start(ctx context.Context, logger *slog.Logger, tasks ...Wo
 }
 
 // Stop will signal to all internal tasks to stop, by canceling their internal contexts.
-func (w *WithWorker) Stop(ctx context.Context, logger *slog.Logger) error {
+func (w *WithWorker) Stop(ctx context.Context, logger *slog.Logger) {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 
 	w.cancelCtx()
-	return nil
 }
 
 // StartedChan returns a channel that can be used to inspect if all the tasks have

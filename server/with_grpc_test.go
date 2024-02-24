@@ -12,14 +12,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-type testWithGRPC struct {
-	*WithGRPC
-}
-
-func (t *testWithGRPC) ConfigureGRPC(w *WithGRPC) {
-	t.WithGRPC = w
-}
-
 func Test_WithGRPC(t *testing.T) {
 	t.Run("started channel: multiple listeners are allowed", func(t *testing.T) {
 		listener1Ok := false

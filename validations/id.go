@@ -7,7 +7,9 @@ import (
 	"github.com/tscolari/servicetools/nanoid"
 )
 
-func IsID(prefix string) *idRule {
+// IsID provides a validation rule that checks if given ID complies with the rules
+// defined in the servicetools/nanoid package.
+func IsID(prefix string) Rule {
 	return &idRule{
 		prefix: prefix,
 	}
