@@ -54,13 +54,16 @@ func (w *WithWorker) Start(ctx context.Context, logger *slog.Logger, tasks ...Wo
 	w.started = true
 	w.wg = new(sync.WaitGroup)
 
+	taskCtx, cancel := context.WithCancel(ctx)
+	w.cancelCtx = cancel
+
 	for _, task := range tasks {
 		w.wg.Add(1)
 		task := task
 
 		go func() {
 			defer w.wg.Done()
-			if err := task(ctx, logger); err != nil {
+			if err := task(taskCtx, logger); err != nil {
 				w.startedChan <- err
 			}
 		}()
@@ -68,7 +71,7 @@ func (w *WithWorker) Start(ctx context.Context, logger *slog.Logger, tasks ...Wo
 
 	logger.Info("starting Worker server")
 	w.mutex.Unlock()
-	w.startedChan <- nil
+	close(w.startedChan)
 	w.wg.Wait()
 
 	return nil
