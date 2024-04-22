@@ -115,7 +115,7 @@ func resetDB(t *testing.T, db *gorm.DB, name string) {
 			continue
 		}
 
-		require.NoError(t, db.Exec("TRUNCATE "+table.Relname).Error)
+		require.NoError(t, db.Exec("TRUNCATE "+table.Relname+" CASCADE").Error)
 	}
 }
 
