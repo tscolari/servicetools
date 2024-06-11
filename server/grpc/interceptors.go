@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 
-	"github.com/gogo/status"
 	"github.com/tscolari/servicetools/logging"
 )
 
