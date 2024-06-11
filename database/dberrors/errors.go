@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/gogo/status"
 	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 

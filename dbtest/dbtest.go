@@ -1,15 +1,15 @@
 package dbtest
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	_ "github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 	"github.com/tscolari/servicetools/database"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 
 	// used because the source of the migration is a file.
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -66,11 +66,11 @@ func init() {
 // Because DB will reset the database on every call, it's not safe for
 // this to be used in parallel tests, unless they are using different
 // database names.
-func DB(t *testing.T, migrationsPath, name string) (*gorm.DB, func()) {
+func DB(t *testing.T, migrationsPath, name string) (*sql.DB, func()) {
 
 	name = name + Config.DBSuffix
 
-	var db *gorm.DB
+	var db *sql.DB
 
 	if !isDBInitialized(name) {
 		db = initializeDB(t, migrationsPath, name)
@@ -78,7 +78,7 @@ func DB(t *testing.T, migrationsPath, name string) (*gorm.DB, func()) {
 	} else {
 		var err error
 		connStr := connectionString(defaultUser, defaultPassword, name)
-		db, err = gorm.Open(postgres.Open(connStr))
+		db, err = sql.Open("postgres", connStr)
 		require.NoError(t, err, "failed to open DB connection")
 
 	}
@@ -89,10 +89,8 @@ func DB(t *testing.T, migrationsPath, name string) (*gorm.DB, func()) {
 }
 
 // Close can be used to close a database connection.
-func Close(t *testing.T, db *gorm.DB) {
-	sqlDB, err := db.DB()
-	require.NoError(t, err)
-	require.NoError(t, sqlDB.Close())
+func Close(t *testing.T, db *sql.DB) {
+	require.NoError(t, db.Close())
 }
 
 func isDBInitialized(name string) bool {
@@ -100,23 +98,23 @@ func isDBInitialized(name string) bool {
 	return ok
 }
 
-func initializeDB(t *testing.T, migrationsPath, name string) *gorm.DB {
+func initializeDB(t *testing.T, migrationsPath, name string) *sql.DB {
 	connStr := connectionString(Config.Username, Config.Password, Config.DBName)
-	db, err := gorm.Open(postgres.Open(connStr))
+	db, err := sql.Open("postgres", connStr)
 	require.NoError(t, err, "failed to open DB connection")
-
-	defer Close(t, db)
 
 	// Intentionally ignore errors here
 	// Ideally we want to drop and recreate on the first run, but we don't
 	// want to fail in case someone is connected to the db for example.
-	_ = db.Exec("DROP DATABASE IF EXISTS " + name).Error
-	_ = db.Exec("CREATE DATABASE " + name).Error
+	_, _ = db.Exec("DROP DATABASE IF EXISTS " + name)
+	_, _ = db.Exec("CREATE DATABASE " + name)
 
 	initializedDBs[name] = struct{}{}
 
+	require.NoError(t, db.Close())
+
 	connStr = connectionString(defaultUser, defaultPassword, name)
-	db, err = gorm.Open(postgres.Open(connStr))
+	db, err = sql.Open("postgres", connStr)
 	require.NoError(t, err, "failed to open DB connection")
 
 	if migrationsPath != "" {
@@ -126,24 +124,24 @@ func initializeDB(t *testing.T, migrationsPath, name string) *gorm.DB {
 	return db
 }
 
-func resetDB(t *testing.T, db *gorm.DB, name string) {
-	rows, err := db.Table("pg_stat_user_tables").Rows()
+func resetDB(t *testing.T, db *sql.DB, name string) {
+	rows, err := db.Query("SELECT relname FROM pg_stat_user_tables")
 	require.NoError(t, err)
 
-	for rows.Next() {
-		table := struct {
-			Relname    string
-			Schemaname string
-		}{}
+	defer rows.Close()
 
-		require.NoError(t, db.ScanRows(rows, &table))
+	for rows.Next() {
+		var relname string
+
+		require.NoError(t, rows.Scan(&relname))
 
 		// Do not clean up the schema migrations.
-		if table.Relname == "schema_migrations" {
+		if relname == "schema_migrations" {
 			continue
 		}
 
-		require.NoError(t, db.Exec("TRUNCATE "+table.Relname+" CASCADE").Error)
+		_, err := db.Exec("TRUNCATE " + relname + " CASCADE")
+		require.NoError(t, err)
 	}
 }
 
@@ -151,7 +149,7 @@ func connectionString(user, password, dbname string) string {
 	return fmt.Sprintf("host=127.0.0.1 port=5432 sslmode=disable user=%s password=%s dbname=%s", user, password, dbname)
 }
 
-func migrateDB(t *testing.T, db *gorm.DB, migrationsPath string) {
+func migrateDB(t *testing.T, db *sql.DB, migrationsPath string) {
 	dir, err := os.Getwd()
 	require.NoError(t, err, "failed to get current directory")
 	baseDir := dir

@@ -1,12 +1,12 @@
 package database
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 
 	"github.com/golang-migrate/migrate/v4"
 	migratepg "github.com/golang-migrate/migrate/v4/database/postgres"
-	"gorm.io/gorm"
 
 	// used because the source of the migration is a file.
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -14,14 +14,9 @@ import (
 
 // Migrate performs the database migration using the given database connection
 // and migrations path.
-func Migrate(db *gorm.DB, migrationsPath string) error {
+func Migrate(db *sql.DB, migrationsPath string) error {
 
-	sqlDB, err := db.DB()
-	if err != nil {
-		return fmt.Errorf("failed to get underlying database object: %w", err)
-	}
-
-	driver, err := migratepg.WithInstance(sqlDB, &migratepg.Config{})
+	driver, err := migratepg.WithInstance(db, &migratepg.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to create database driver: %w", err)
 	}

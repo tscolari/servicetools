@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 const (
@@ -29,6 +30,11 @@ type Config struct {
 	Password string `json:"password,omitempty"`
 	DBName   string `json:"db_name,omitempty"`
 	SSLMode  bool   `json:"ssl_mode,omitempty"`
+
+	MaxIdleConns    int           `json:"max_idle_conns,omitempty"`
+	MaxOpenConns    int           `json:"max_open_conns,omitempty"`
+	ConnMaxIdleTime time.Duration `json:"conn_max_idle_time,omitempty"`
+	ConnMaxLifeTime time.Duration `json:"conn_max_life_time,omitempty"`
 }
 
 // ConfigFromEnv loads the database configuration from env variables
