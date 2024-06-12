@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
 
+	_ "github.com/jackc/pgx/v5"
 	"github.com/spf13/cobra"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 
 	"github.com/tscolari/servicetools/database"
 )
@@ -55,9 +55,14 @@ var migrateCmd = &cobra.Command{
 			return err
 		}
 
-		db, err := gorm.Open(postgres.Open(dbConfig.ToConnectStr()))
+		db, err := sql.Open("postgres", dbConfig.ToConnectStr())
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to connect to database: %v\n", err)
+			return err
+		}
+
+		if err := db.Ping(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to check connection to database: %v\n", err)
 			return err
 		}
 
