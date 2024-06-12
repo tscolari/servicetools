@@ -2,18 +2,17 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/tscolari/servicetools/database"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 // NewWithRDB returns a WithRDB object configured with the given config.
-func NewWithRDB(databaseConfig *database.Config) (*WithRDB, error) {
-	db, err := gorm.Open(postgres.Open(databaseConfig.ToConnectStr()))
+func NewWithRDB(config *database.Config) (*WithRDB, error) {
+	db, err := openDB(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, fmt.Errorf("database initialization failed: %w", err)
 	}
 
 	return &WithRDB{
@@ -25,7 +24,7 @@ func NewWithRDB(databaseConfig *database.Config) (*WithRDB, error) {
 // Although this has no semantic restriction, the idea of this is to provide
 // a second database access (on top of the WithDB) that is meant for read-only operations.
 type WithRDB struct {
-	BaseRDB *gorm.DB
+	BaseRDB *sql.DB
 }
 
 // ConfigureReaderDatabase is the hook used by the cmd package to inject the
@@ -35,10 +34,10 @@ func (s *WithRDB) ConfigureReaderDatabase(*WithRDB) {
 }
 
 // RDB returns an usable DB connection, meant for read-only operations.
-func (s *WithRDB) RDB(ctx context.Context) *gorm.DB {
+func (s *WithRDB) RDB(ctx context.Context) *sql.DB {
 	if s.BaseRDB == nil {
 		return nil
 	}
 
-	return s.BaseRDB.Session(&gorm.Session{})
+	return s.BaseRDB
 }

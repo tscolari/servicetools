@@ -2,18 +2,17 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/tscolari/servicetools/database"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 // NewWithDB returns a WithDB object configured with the given config.
-func NewWithDB(databaseConfig *database.Config) (*WithDB, error) {
-	db, err := gorm.Open(postgres.Open(databaseConfig.ToConnectStr()))
+func NewWithDB(config *database.Config) (*WithDB, error) {
+	db, err := openDB(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, fmt.Errorf("database initialization failed: %w", err)
 	}
 
 	return &WithDB{
@@ -27,16 +26,17 @@ type WithDB struct {
 	// BaseDB contains a source connection to the database.
 	// This is not safe to be used directly, and it's exposed only for
 	// the purposes of making testing (and modifications) easier.
-	BaseDB *gorm.DB
+	BaseDB *sql.DB
 }
 
-// DB returns an usable database connection.
-func (s *WithDB) DB(ctx context.Context) *gorm.DB {
+// DB returns an usable database object.
+// If no database configured, it will return nil.
+func (s *WithDB) DB(ctx context.Context) *sql.DB {
 	if s.BaseDB == nil {
 		return nil
 	}
 
-	return s.BaseDB.Session(&gorm.Session{})
+	return s.BaseDB
 }
 
 // ConfigureDatabase is the hook used by the cmd package to inject the

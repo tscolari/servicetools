@@ -66,6 +66,10 @@ func (s *WithGRPC) Start(ctx context.Context, logger *slog.Logger, registerFuncs
 		registerFunc(s.server)
 	}
 
+	for serviceName := range s.server.GetServiceInfo() {
+		logger.Info("service registered", "service_name", serviceName)
+	}
+
 	s.address = listener.Addr().String()
 	s.started = true
 	logger.Info("starting GRPC Server", "address", s.address)

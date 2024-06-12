@@ -36,7 +36,8 @@ func Test_WithRDB(t *testing.T) {
 	require.NotNil(t, db)
 
 	testQuery := `SELECT * FROM information_schema.tables`
-	require.NoError(t, db.Exec(testQuery).Error)
+	_, err = db.Exec(testQuery)
+	require.NoError(t, err)
 
 	t.Run("when the connection is invalid", func(t *testing.T) {
 		config := database.Config{
@@ -52,4 +53,3 @@ func Test_WithRDB(t *testing.T) {
 		require.Error(t, err)
 	})
 }
-
