@@ -25,9 +25,9 @@ type MyService struct{
 
 Currently, the components are:
 
-* WithDB: takes a database configuration and exposes `DB()` (gorm)
+* WithDB: takes a database configuration and exposes `DB()` (database/sql.DB)
 * WithRDB: sames as WithDB, but meant for "readonly" access. Exposes `RDB()`
 * WithGRPC: starts a gRPC server internally and mounts all gRPC services that are given to it.
 * WithHTTP: starts a HTTP server internally and mounts all handlers that are given to it.
-* WithHealthcheck: mounts a basic HTTP server for healthchecks and exposes metrics using opentelemetry.
+* WithMetrics: mounts a basic HTTP server to expose metrics (with optional healthcheck handlers).
 * WithWorker: starts tasks in the background.
