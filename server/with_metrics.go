@@ -11,11 +11,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// NewWithMetrics returns a WithMetrics object configured with address and metrics.
-func NewWithMetrics(address string, metrics bool) *WithMetrics {
+// NewWithMetrics returns a WithMetrics object configured with address.
+func NewWithMetrics(address string) *WithMetrics {
 	return &WithMetrics{
 		address: address,
-		metrics: metrics,
 	}
 }
 
@@ -23,7 +22,6 @@ func NewWithMetrics(address string, metrics bool) *WithMetrics {
 // with exposed prometheus metrics.
 type WithMetrics struct {
 	address string
-	metrics bool
 
 	listener net.Listener
 	server   *http.Server
@@ -45,9 +43,7 @@ func (h *WithMetrics) StartMetrics(logger *slog.Logger, healthHandler healthchec
 		mux.Handle("/", healthHandler)
 	}
 
-	if h.metrics {
-		mux.Handle("/metrics", promhttp.Handler())
-	}
+	mux.Handle("/metrics", promhttp.Handler())
 
 	h.server = &http.Server{Handler: mux}
 	h.listener = lis

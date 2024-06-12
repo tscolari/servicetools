@@ -36,9 +36,9 @@ type HasWorker interface {
 	ConfigureWorker(*server.WithWorker)
 }
 
-// HasHealthcheck means the Server has healthcheck capability.
-type HasHealthcheck interface {
-	ConfigureHealthcheck(*server.WithHealthcheck)
+// HasMetrics means the Server has metrics capability.
+type HasMetrics interface {
+	ConfigureMetrics(*server.WithMetrics)
 }
 
 // HasDatabase means the Server has database capability.
@@ -67,16 +67,15 @@ func CanServer(rootCmd *cobra.Command, srv Server) {
 	}
 
 	if _, ok := serverToRun.(HasGRPC); ok {
-		serverCmd.PersistentFlags().StringVar(&serverGRPCAddress, "grpc-address", "localhost:0", "address to listen for GRPC connections")
+		serverCmd.PersistentFlags().StringVar(&serverGRPCAddress, "grpc-address", "localhost:0", "listening address for GRPC connections")
 	}
 
 	if _, ok := serverToRun.(HasHTTP); ok {
-		serverCmd.PersistentFlags().StringVar(&serverHTTPAddress, "http-address", "localhost:0", "address to listen for HTTP connections")
+		serverCmd.PersistentFlags().StringVar(&serverHTTPAddress, "http-address", "localhost:0", "listening address for HTTP connections")
 	}
 
-	if _, ok := serverToRun.(HasHealthcheck); ok {
-		serverCmd.PersistentFlags().StringVar(&serverHealthcheckAddress, "healthcheck-address", "localhost:0", "address to listen for healthcheck")
-		serverCmd.PersistentFlags().BoolVar(&serverHealthcheckMetrics, "healthcheck-metrics", true, "mount metrics on the healthcheck endpoint")
+	if _, ok := serverToRun.(HasMetrics); ok {
+		serverCmd.PersistentFlags().StringVar(&serverMetricsAddress, "metrics-address", "localhost:0", "listening address for metrics")
 	}
 
 	rootCmd.AddCommand(serverCmd)
@@ -85,12 +84,11 @@ func CanServer(rootCmd *cobra.Command, srv Server) {
 var (
 	serverToRun Server
 
-	serverGRPCAddress        string
-	serverHTTPAddress        string
-	serverHealthcheckAddress string
-	serverHealthcheckMetrics bool
-	serverDBEnvPrefix        string
-	serverRDBEnvPrefix       string
+	serverGRPCAddress    string
+	serverHTTPAddress    string
+	serverMetricsAddress string
+	serverDBEnvPrefix    string
+	serverRDBEnvPrefix   string
 )
 
 var serverCmd = &cobra.Command{
@@ -118,9 +116,9 @@ var serverCmd = &cobra.Command{
 			workerSrv.ConfigureWorker(withWorker)
 		}
 
-		if healthSrv, ok := serverToRun.(HasHealthcheck); ok {
-			withHealthcheck := server.NewWithHealthcheck(serverHealthcheckAddress, serverHealthcheckMetrics)
-			healthSrv.ConfigureHealthcheck(withHealthcheck)
+		if metricsSrv, ok := serverToRun.(HasMetrics); ok {
+			withMetrics := server.NewWithMetrics(serverMetricsAddress)
+			metricsSrv.ConfigureMetrics(withMetrics)
 		}
 
 		if withDBSrv, ok := serverToRun.(HasDatabase); ok {

@@ -14,7 +14,7 @@ type MockHTTPRegisterFunc struct {
 }
 
 // Execute provides a mock function with given fields: handle
-func (_m *MockHTTPRegisterFunc) Execute(handle func(string, http.Handler)) {
+func (_m *MockHTTPRegisterFunc) Execute(handle func(string, func(http.ResponseWriter, *http.Request))) {
 	_m.Called(handle)
 }
 
