@@ -22,7 +22,7 @@ const (
 	defaultSuffix   = "_test"
 )
 
-// Config contains a set of properties that can be redefined to accomodate
+// Config contains a set of properties that can be redefined to accommodate
 // different test environments.
 var Config = struct {
 	// Username is the database username used to open the connection.
@@ -31,20 +31,25 @@ var Config = struct {
 	// Password is the database password used to open the connection.
 	Password string
 
-	// DBName is the database name to connect to. This is not the same dbname
+	// RootDBName is the database name to connect to. This is not the same dbname
 	// that the tests will run within.
 	// This is only used to create the initial connection that will then create
 	// the database for the tests (based on the argument given to `DB()`).
-	DBName string
+	RootDBName string
 
 	// DBSuffix is a string that is appended to the database name to
 	// distinguish it from the "non-testing" version.
+	// e.g. if DBSuffix is `_test`, and the name given to DB() is `myservice`,
+	// for testing purposes, this package will create and use the `myservice_test`
+	// database instead.
+	// Empty DBSuffix will cause this package to use the raw name provided in DB()
+	// for testing too.
 	DBSuffix string
 }{
-	Username: defaultUser,
-	Password: defaultPassword,
-	DBName:   defaultDBName,
-	DBSuffix: defaultSuffix,
+	Username:   defaultUser,
+	Password:   defaultPassword,
+	RootDBName: defaultDBName,
+	DBSuffix:   defaultSuffix,
 }
 
 var initializedDBs map[string]struct{}
@@ -99,7 +104,7 @@ func isDBInitialized(name string) bool {
 }
 
 func initializeDB(t *testing.T, migrationsPath, name string) *sql.DB {
-	connStr := connectionString(Config.Username, Config.Password, Config.DBName)
+	connStr := connectionString(Config.Username, Config.Password, Config.RootDBName)
 	db, err := sql.Open("postgres", connStr)
 	require.NoError(t, err, "failed to open DB connection")
 
