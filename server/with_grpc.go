@@ -24,7 +24,7 @@ func NewWithGRPC(address string, options ...grpc.ServerOption) *WithGRPC {
 
 // GRPCRegisterFunc is used as arguments to the Start method.
 // It exposes the internal gRPC server and allow gRPC services to register to it.
-type GRPCRegisterFunc func(*grpc.Server)
+type GRPCRegisterFunc func(grpc.ServiceRegistrar)
 
 // WithGRPC defines the gRPC server capability.
 type WithGRPC struct {

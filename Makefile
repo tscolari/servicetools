@@ -1,5 +1,3 @@
-SERVICES := ./services/customers
-
 all: mocks
 
 .PHONY: mocks
